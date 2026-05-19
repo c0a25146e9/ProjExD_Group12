@@ -97,6 +97,15 @@ class Block:
         )
 
 
+class Press:
+    def __init__(self, x, y, w, h):
+        self.rect = pg.Rect(x, y, w, h)
+
+    def update(self, screen: pg.Surface, block):
+        block.kill()
+
+
+
 class Enemy:
     def __init__(self, x, y):
 
@@ -164,10 +173,15 @@ def reset_game():
     # 地面
     blocks = [
         Block(0, 500, 2500, 100),
-        Block(400, 400, 200, 30),
+        # Block(400, 400, 200, 30),
         Block(700, 300, 200, 30),
         Block(1200, 350, 200, 30),
     ]
+
+    # 仕掛け地面
+    block = Block(400, 400, 200, 30)
+    if block.colliderect(player):
+        block
 
     # 敵
     enemies = [
