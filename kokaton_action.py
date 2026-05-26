@@ -197,6 +197,10 @@ def draw_text_J(screen, text, size, x, y, color=BLACK):
     img = font.render(text, True, color)
     screen.blit(img, (x, y))
 
+def Time():
+    #現在の時間を取得する
+    t_time = int(time.time())
+    return t_time
 
 def reset_game():
     # プレイヤー
@@ -248,6 +252,7 @@ def main():
     game_miss = False
 
     score = Score(game_start, game_over, game_clear)  
+    lst = []
 
     #  Soundを持ってくる
     snd1 = pg.mixer.Sound("./sound/アヒルが大笑い.mp3")
@@ -268,6 +273,7 @@ def main():
                         game_start = True
                     # ミス後の再開
                     elif game_miss:
+                        lst = []
                         player, blocks, enemies, items, goal, scroll_x = reset_game()
                         game_miss = False
                         game_start = True
@@ -277,7 +283,7 @@ def main():
                         life.num = 3
 
                         player, blocks, enemies, items, goal, scroll_x = reset_game()
-
+                        lst = []
                         game_over = False
                         game_clear = False
                         game_start = False
@@ -294,6 +300,17 @@ def main():
             draw_text(screen, "PRESS ENTER TO START", 45,WIDTH // 2, 350)
         # ゲーム中
         elif not game_over and not game_clear and not game_miss:
+            # タイムリミット
+            lst.append(Time())
+            r_game = lst[0] + 30 # game終了まで
+            draw_text_J(screen, f"残り時間:{r_game-Time()}秒", 20, WIDTH - 170, 0, (0,0,255))
+            # ゲーム終了までの判定
+            if  Time() >= r_game:
+                life.num -= 1
+                if life.num <= 0:
+                    game_over = True
+                else:
+                    game_miss = True
             # プレイヤー更新
             player.update(keys, blocks)
             # 横スクロール
@@ -330,11 +347,6 @@ def main():
                             else:
                                 snd2.play()
                                 game_miss = True
-
-                        # if state != "active":
-                        #     game_over = True
-
-            now = int(time.time())  # 現在の時間を取得    
             
             # アイテム判定
             # アイテムを拾った時、無敵状態となるようにする
@@ -350,13 +362,13 @@ def main():
                     end = s_time + 5  # 五秒後にアイテムの効果が切れるように調整
                     state = "active"  # アイテムをとった時active状態にする    
                 
-            l_time = end - now 
+            l_time = end - Time()
             
             if state == "active":
-                draw_text_J(screen, f"効果時間:{l_time}秒", 20, 30, 50, (0,255,255)) 
+                draw_text_J(screen, f"無敵時間:{l_time}秒", 20, 30, 50, (0,255,255)) 
             
-            if now >= end:  # アイテムの効果時間が切れたらinactiveに戻す
-                draw_text_J(screen, "効果時間:0秒", 20, 30, 50, BLACK)
+            if Time() >= end:  # アイテムの効果時間が切れたらinactiveに戻す
+                draw_text_J(screen, "無敵時間:0秒", 20, 30, 50, BLACK)
                 state = "inactive"
 
             # アイテム描画 
@@ -390,7 +402,6 @@ def main():
 
             # #敵討伐スコア
             # draw_text(screen,f"SCORE : {score}",40,100,20)
-
         # ゲームオーバー
         elif game_over:
             draw_text(screen, "GAME OVER", 80, WIDTH // 2, 220, RED)
