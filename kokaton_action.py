@@ -309,9 +309,10 @@ def main():
             for block in blocks:
                 block.draw(screen, scroll_x)
 
+            # 仕掛け床判定
             if player.on_ground and player.rect.bottom == block.rect.top and player.rect.right > block.rect.left and player.rect.left < block.rect.right:
-                block.rect.y += 2
-                player.rect.y += 2
+                block.rect.y += 10
+                player.rect.y += 10
 
             # 敵描画
             for enemy in enemies:
