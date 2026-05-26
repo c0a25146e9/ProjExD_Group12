@@ -133,6 +133,39 @@ class Life:
                 screen.blit(self.image, (start_x + i * 50, y))
 
 
+class Score:
+    """
+    ゲーム中のスコアを表示させるクラス
+    引数1:game_startの真偽
+    引数2:game_overの真偽
+    引数3:game_clearの真偽
+
+    敵：10点
+    """
+    def __init__(self, game_start, game_over, game_clear):
+        self.game_start = game_start
+        self.game_over = game_over
+        self.game_clear = game_clear
+        self.font = pg.font.Font(None, 50)
+        self.color = BLACK
+        self.value = 0
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-550
+
+    def update(self, screen: pg.Surface, game_start, game_over, game_clear):
+        if not game_start:
+            return()
+        
+        if game_over or game_clear:  # ゲーム中とゲーム後のScoreの位置の変化
+            self.rect.center = 370, 400
+        else:
+            self.rect.center = 100, HEIGHT-550
+
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
 def draw_text(screen, text, size, x, y, color=BLACK):
     font = pg.font.SysFont("yugothic", size)
     img = font.render(text, True, color)
@@ -181,6 +214,8 @@ def main():
     game_clear = False
     game_miss = False
 
+    score = Score(game_start, game_over, game_clear)
+
     while True:
         keys = pg.key.get_pressed()
 
@@ -205,6 +240,7 @@ def main():
                         game_over = False
                         game_clear = False
                         game_start = False
+                        score.value = 0  # スコアをリセット
 
         # 背景
         screen.fill(WHITE)
@@ -236,7 +272,9 @@ def main():
                     # 上から踏んだ
                     if (player.vy > 0 and player.rect.bottom < enemy.rect.centery):
                         enemies.remove(enemy)
-                        score += 100
+                        # score += 100
+                        score.value += 10  # スコアに10点追加
+
                         # 跳ねる
                         player.vy = -10
                     else:
@@ -260,8 +298,8 @@ def main():
             # プレイヤー描画
             player.draw(screen, scroll_x)
 
-            #敵討伐スコア
-            draw_text(screen,f"SCORE : {score}",40,100,20)
+            # #敵討伐スコア
+            # draw_text(screen,f"SCORE : {score}",40,100,20)
 
         # ゲームオーバー
         elif game_over:
@@ -277,6 +315,7 @@ def main():
             draw_text(screen, "GAME CLEAR!", 80, WIDTH // 2, 220, BLUE)
             draw_text(screen, "PRESS ENTER", 50, WIDTH // 2, 320)
 
+        score.update(screen, game_start, game_over, game_clear)
         pg.display.update()
         clock.tick(60)
 
