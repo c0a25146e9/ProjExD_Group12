@@ -97,25 +97,6 @@ class Block:
         )
 
 
-class Press:
-    def __init__(self, x, y, w, h):
-        self.rect = pg.Rect(x, y, w, h)
-    
-    def draw(self, screen, scroll_x):
-
-        pg.draw.rect(
-            screen,
-            GREEN,
-            (
-                self.rect.x - scroll_x,
-                self.rect.y,
-                self.rect.width,
-                self.rect.height
-            )
-        )
-
-
-
 class Enemy:
     def __init__(self, x, y):
 
@@ -182,14 +163,15 @@ def reset_game():
 
     # 地面
     blocks = [
-        Block(0, 500, 2500, 100),
-        # Block(400, 400, 200, 30),
+        # Block(0, 500, 2500, 100),
+        Block(400, 400, 200, 30),
         Block(700, 300, 200, 30),
         Block(1200, 350, 200, 30),
+        # 仕掛け床用
+        Block(0, 500, 1000, 100),
+        Block(1300, 500, 2500, 100),
+        Block(1000, 500, 1300, 100),
     ]
-
-    # 仕掛け地面
-    press = Press(400, 400, 200, 30)
 
     # 敵
     enemies = [
@@ -310,9 +292,13 @@ def main():
                 block.draw(screen, scroll_x)
 
             # 仕掛け床判定
-            if player.on_ground and player.rect.bottom == block.rect.top and player.rect.right > block.rect.left and player.rect.left < block.rect.right:
-                block.rect.y += 10
-                player.rect.y += 10
+            cou = 0
+            for block in blocks[:]:
+                if cou == 5:  # blocksリストの何個目が仕掛け床になるか
+                    if player.on_ground and player.rect.bottom == block.rect.top and player.rect.right > block.rect.left and player.rect.left < block.rect.right:
+                       block.rect.y += 100
+                       player.rect.y += 100
+                cou += 1
 
             # 敵描画
             for enemy in enemies:
