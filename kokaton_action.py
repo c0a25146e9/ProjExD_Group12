@@ -1,5 +1,7 @@
 import pygame as pg
 import sys
+import os
+import time
 
 # 画面サイズ
 WIDTH = 800
@@ -19,7 +21,7 @@ GRAVITY = 0.8
 # ジャンプ力
 JUMP_POWER = -15
 
-
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 class Player:
     def __init__(self):
 
@@ -146,10 +148,34 @@ class Goal:
             ]
         )
 
+class Item:
+    """
+    アイテムの位置を設定しているクラス
+    引数 x(x座標), y(y座標)でアイテムの位置を指定する
+    
+    """
+    def __init__(self, x, y):
+        self.image = pg.Surface((20, 20))
+        pg.draw.circle(self.image, (0, 255, 230), (10, 10), 10)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
+            
+    def draw(self, screen, scroll_x):
+        screen.blit(self.image,(self.rect.x-scroll_x,self.rect.y))
 
 def draw_text(screen, text, size, x, y, color=BLACK):
 
     font = pg.font.Font(None, size)
+
+    img = font.render(text, True, color)
+
+    screen.blit(img, (x, y))
+
+def draw_text_J(screen, text, size, x, y, color=BLACK):
+
+    
+    font = pg.font.SysFont("Meiryo", size)
 
     img = font.render(text, True, color)
 
@@ -175,13 +201,16 @@ def reset_game():
         Enemy(1200, 460),
     ]
 
+    # アイテム
+    items = [Item(400, 380),]
+
     # ゴール旗
     goal = Goal(2200, 380)
 
     # スクロール量
     scroll_x = 0
 
-    return player, blocks, enemies, goal, scroll_x
+    return player, blocks, enemies, items, goal, scroll_x
 
 
 def main():
@@ -195,12 +224,14 @@ def main():
     clock = pg.time.Clock()
 
     # 初期化
-    player, blocks, enemies, goal, scroll_x = reset_game()
+    player, blocks, enemies, items, goal, scroll_x = reset_game()
 
     # ゲーム状態
     game_start = False
     game_over = False
     game_clear = False
+
+    
 
     while True:
 
@@ -224,12 +255,13 @@ def main():
                     # リスタート
                     elif game_over or game_clear:
 
-                        player, blocks, enemies, goal, scroll_x = reset_game()
+                        player, blocks, enemies, items, goal, scroll_x = reset_game()
 
                         game_over = False
                         game_clear = False
                         game_start = False
 
+                        state = "inactive"  # 初期状態はinactive
         # 背景
         screen.fill(WHITE)
 
@@ -277,7 +309,41 @@ def main():
                         player.vy = -10
 
                     else:
-                        game_over = True
+                        if state != "active":
+                            game_over = True
+
+            now = int(time.time())  # 現在の時間を取得
+            
+            
+                
+            
+            # アイテム判定
+            # アイテムを拾った時、無敵状態となるようにする
+            for item in items[:]:
+                # for文の外で使えるように変数をここで定義
+                end = 0   # アイテムの効果終了時間を保管 
+                s_time = 0  # アイテムの効果開始時間を保管
+                state = ""   # アイテムが効果中か否かの状態を示す
+
+                if player.rect.colliderect(item.rect):  # プレイヤーとアイテムの衝突判定
+                    items.remove(item)
+                    s_time = int(time.time())  # 現在の時間を一度保存
+                    end = s_time + 5  # 五秒後にアイテムの効果が切れるように調整
+                    state = "active"  # アイテムをとった時active状態にする    
+                
+            l_time = end - now 
+            
+            if state == "active":
+                draw_text_J(screen, f"効果時間:{l_time}sec", 40, 0, 0, (0,255,255)) 
+            
+            if now >= end:  # アイテムの効果時間が切れたらinactiveに戻す
+                draw_text_J(screen, "効果時間:0sec", 40, 0, 0, BLACK)
+                state = "inactive"
+
+            
+            
+            for item in items:
+                item.draw(screen, scroll_x)
 
             # ゴール判定
             if player.rect.colliderect(goal.rect):
@@ -299,15 +365,15 @@ def main():
 
         # ゲームオーバー
         elif game_over:
-
-            draw_text(
-                screen,
-                "GAME OVER",
-                80,
-                230,
-                220,
-                RED
-            )
+            if state != "active":
+                draw_text(
+                    screen,
+                    "GAME OVER",
+                    80,
+                    230,
+                    220,
+                    RED
+                )
 
             draw_text(
                 screen,
